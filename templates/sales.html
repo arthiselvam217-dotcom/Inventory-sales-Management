@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales Management | Inventory & Sales Analytics{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <!-- Header Section -->
+    <div class="page-header mb-4">
+        <h1 class="page-title mb-1">Sales Management</h1>
+        <p class="text-muted mb-0">Record new customer transactions and monitor historical sales activity.</p>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="fs-2">🧾</div>
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Total Transactions</div>
+                        <div class="fs-4 fw-bold text-dark">{{ sales|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6">
+            <div class="card border-0 shadow-sm p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="fs-2">📦</div>
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Total Units Sold</div>
+                        <div class="fs-4 fw-bold text-dark">{{ total_units_sold }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-12">
+            <div class="card border-0 shadow-sm p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="fs-2">💰</div>
+                    <div>
+                        <div class="text-muted small fw-semibold text-uppercase">Total Revenue</div>
+                        <div class="fs-4 fw-bold text-success">₹{{ "%.2f"|format(total_revenue) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Record Sale Form Column -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="card-title fw-bold mb-0">🛒 Record New Sale</h5>
+                </div>
+                <div class="card-body p-4">
+                    {% if products %}
+                        <form action="{{ url_for('sales.record_sale') }}" method="POST" id="salesForm">
+                            <!-- Product Selection -->
+                            <div class="mb-3">
+                                <label for="product_select" class="form-label fw-semibold">Select Product <span class="text-danger">*</span></label>
+                                <select class="form-select" id="product_select" name="product_id" required>
+                                    <option value="" disabled selected>-- Choose a Product --</option>
+                                    {% for product in products %}
+                                        <option value="{{ product.id }}" 
+                                                data-price="{{ product.price }}" 
+                                                data-stock="{{ product.stock }}"
+                                                {% if product.stock <= 0 %}class="text-danger"{% endif %}>
+                                            {{ product.name }} &bull; ₹{{ "%.2f"|format(product.price) }} ({{ product.stock }} in stock)
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div id="stockBadge" class="mt-2 small text-muted"></div>
+                            </div>
+
+                            <!-- Auto-Retrieved Unit Price -->
+                            <div class="mb-3">
+                                <label for="unit_price" class="form-label fw-semibold">Unit Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="text" class="form-control bg-light" id="unit_price" placeholder="0.00" readonly>
+                                </div>
+                            </div>
+
+                            <!-- Quantity Input -->
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label fw-semibold">Quantity Sold <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" min="1" placeholder="Enter quantity" required disabled>
+                                <div class="form-text" id="quantityHelper">Select a product to specify quantity.</div>
+                            </div>
+
+                            <!-- Calculated Total Amount -->
+                            <div class="mb-4 p-3 bg-light rounded-3 border">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-semibold text-secondary">Total Amount:</span>
+                                    <span class="fs-4 fw-bold text-success" id="total_amount_display">₹0.00</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" id="submitSaleBtn" disabled>
+                                Complete Sale Transaction
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <div class="fs-1 mb-2">📦</div>
+                            <h6>No Products Available</h6>
+                            <p class="small mb-3">Add products to your inventory before recording sales.</p>
+                            <a href="{{ url_for('products.index') }}" class="btn btn-sm btn-primary">Go to Products</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Transaction History Column -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-light border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title fw-bold mb-0">📜 Sales History</h5>
+                    <span class="badge bg-secondary-subtle text-secondary border">{{ sales|length }} Records</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="width: 60px;">ID</th>
+                                <th scope="col">Date (UTC)</th>
+                                <th scope="col">Product Name</th>
+                                <th scope="col" class="text-center">Qty</th>
+                                <th scope="col" class="text-end">Total Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in sales %}
+                                <tr>
+                                    <td class="text-muted fw-semibold">#{{ sale.id }}</td>
+                                    <td class="small text-muted">
+                                        {{ sale.sale_date.strftime('%Y-%m-%d %H:%M') if sale.sale_date else '—' }}
+                                    </td>
+                                    <td>
+                                        {% if sale.product %}
+                                            <strong class="text-dark">{{ sale.product.name }}</strong>
+                                        {% else %}
+                                            <span class="text-muted fst-italic">[Deleted Product]</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border px-2 py-1">{{ sale.quantity }}</span>
+                                    </td>
+                                    <td class="text-end fw-bold text-success">
+                                        ₹{{ "%.2f"|format(sale.total_amount) }}
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">
+                                        <div class="mb-2 fs-2">🏷️</div>
+                                        <h5>No sales transactions recorded yet</h5>
+                                        <p class="small">Completed customer sales will appear in this log.</p>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const productSelect = document.getElementById('product_select');
+    const unitPriceInput = document.getElementById('unit_price');
+    const quantityInput = document.getElementById('quantity');
+    const quantityHelper = document.getElementById('quantityHelper');
+    const totalAmountDisplay = document.getElementById('total_amount_display');
+    const submitBtn = document.getElementById('submitSaleBtn');
+    const stockBadge = document.getElementById('stockBadge');
+
+    if (!productSelect) return;
+
+    function updateTotal() {
+        const selectedOption = productSelect.options[productSelect.selectedIndex];
+        if (!selectedOption || !selectedOption.value) {
+            unitPriceInput.value = '';
+            totalAmountDisplay.textContent = '₹0.00';
+            quantityInput.disabled = true;
+            submitBtn.disabled = true;
+            stockBadge.innerHTML = '';
+            return;
+        }
+
+        const price = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+        const stock = parseInt(selectedOption.getAttribute('data-stock'), 10) || 0;
+
+        unitPriceInput.value = price.toFixed(2);
+        quantityInput.max = stock;
+
+        if (stock <= 0) {
+            quantityInput.disabled = true;
+            quantityInput.value = '';
+            submitBtn.disabled = true;
+            stockBadge.innerHTML = '<span class="text-danger fw-semibold">⚠️ This product is out of stock!</span>';
+            quantityHelper.textContent = 'Restock this product to allow new sales.';
+            totalAmountDisplay.textContent = '₹0.00';
+            return;
+        }
+
+        quantityInput.disabled = false;
+        stockBadge.innerHTML = `<span class="text-success fw-semibold">✓ ${stock} unit(s) available in inventory</span>`;
+        quantityHelper.textContent = `Enter a quantity between 1 and ${stock}.`;
+
+        let qty = parseInt(quantityInput.value, 10);
+        if (isNaN(qty) || qty <= 0) {
+            qty = 0;
+            submitBtn.disabled = true;
+        } else if (qty > stock) {
+            quantityHelper.innerHTML = `<span class="text-danger fw-semibold">Cannot exceed available stock (${stock})!</span>`;
+            submitBtn.disabled = true;
+        } else {
+            submitBtn.disabled = false;
+        }
+
+        const total = price * qty;
+        totalAmountDisplay.textContent = `₹${total.toFixed(2)}`;
+    }
+
+    productSelect.addEventListener('change', function () {
+        quantityInput.value = '1';
+        updateTotal();
+    });
+
+    quantityInput.addEventListener('input', updateTotal);
+});
+</script>
+{% endblock %}

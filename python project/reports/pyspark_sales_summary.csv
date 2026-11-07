@@ -1,0 +1,4 @@
+product_id,product_name,category,total_quantity_sold,total_revenue,transaction_count,avg_sale_amount
+1,Sample Mechanical Keyboard,Accessories,6,539.94,3,179.98
+4,Test Gaming Headset Pro,Pro Audio,3,269.97,1,269.97
+3,Laptop,Electronics,1,60.0,1,60.0

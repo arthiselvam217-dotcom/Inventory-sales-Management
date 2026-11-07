@@ -1,0 +1,6 @@
+sale_id,product_id,product_name,category,quantity,unit_price,total_amount,sale_date
+1,1,Sample Mechanical Keyboard,Accessories,2,89.99,179.98,2026-11-04 08:03:03.323334
+2,1,Sample Mechanical Keyboard,Accessories,2,89.99,179.98,2026-11-04 08:03:54.132350
+3,1,Sample Mechanical Keyboard,Accessories,2,89.99,179.98,2026-11-04 08:17:24.828300
+5,3,Laptop,Electronics,1,60000.0,60.0,2026-11-04 08:30:32.732373
+6,4,Test Gaming Headset Pro,Pro Audio,3,89.99,269.97,2026-11-04 08:55:08.763088

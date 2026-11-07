@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Inventory & Sales Analytics System{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Welcome Hero Section -->
+    <section class="hero-card">
+        <div class="hero-badge">Phase 1: Project Foundation Active</div>
+        <h1 class="hero-title">{{ welcome_message }}</h1>
+        <p class="hero-subtitle">
+            A modular web platform for tracking product inventories, processing sales orders, 
+            and delivering actionable data-driven insights.
+        </p>
+    </section>
+
+    <!-- Project Architecture & Status Cards -->
+    <section class="cards-grid">
+        <div class="card">
+            <div class="card-icon">🚀</div>
+            <h3 class="card-title">Flask Application Core</h3>
+            <p class="card-description">
+                Configured with the Application Factory pattern and modular Flask Blueprints for clean code separation.
+            </p>
+            <div class="card-status status-online">Initialized</div>
+        </div>
+
+        <div class="card">
+            <div class="card-icon">🗄️</div>
+            <h3 class="card-title">Database Layer</h3>
+            <p class="card-description">
+                Flask-SQLAlchemy extension is pre-configured and ready to define Inventory & Sales data models in Phase 2.
+            </p>
+            <div class="card-status status-ready">Configured</div>
+        </div>
+
+        <div class="card">
+            <div class="card-icon">📈</div>
+            <h3 class="card-title">Analytics Stack</h3>
+            <p class="card-description">
+                NumPy and Pandas are installed in the local virtual environment, prepared for aggregations and sales analytics.
+            </p>
+            <div class="card-status status-ready">Installed</div>
+        </div>
+
+        <div class="card">
+            <div class="card-icon">🎨</div>
+            <h3 class="card-title">Template & Styling</h3>
+            <p class="card-description">
+                Structured with Jinja2 base inheritance and custom styling for a clean, responsive user experience.
+            </p>
+            <div class="card-status status-online">Rendered</div>
+        </div>
+    </section>
+
+    <!-- Phase 1 Verification Box -->
+    <section class="info-card">
+        <h2 class="section-title">System Health & Verification</h2>
+        <div class="info-table">
+            <div class="info-row">
+                <span class="info-label">Environment:</span>
+                <span class="info-value">Python Virtual Environment (<code>.venv</code>)</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Framework:</span>
+                <span class="info-value">Flask with Modular Blueprint Architecture</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Routing Status:</span>
+                <span class="info-value text-success">✓ Home route active (<code>/</code>, <code>/dashboard</code>)</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Next Phase:</span>
+                <span class="info-value">Phase 2: Database Models & Inventory Management</span>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
