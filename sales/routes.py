@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from flask import render_template, request, redirect, url_for, flash
 from extensions import db
 from models import Product, Sale
+from utils import format_inr
 from . import sales_bp
 
 @sales_bp.route('/', methods=['GET'])
@@ -86,7 +87,7 @@ def record_sale():
         db.session.commit()
 
         flash(
-            f"Sale recorded successfully! Sold {quantity} × '{product.name}' for ₹{total_amount:,.2f}. Remaining stock: {product.stock}.",
+            f"Sale recorded successfully! Sold {quantity} × '{product.name}' for {format_inr(total_amount)}. Remaining stock: {product.stock}.",
             "success"
         )
     except Exception as e:

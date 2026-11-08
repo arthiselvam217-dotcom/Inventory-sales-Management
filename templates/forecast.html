@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+
+{% block title %}Demand Forecasting & Inventory Planning | Inventory & Sales Analytics{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <!-- Header Section -->
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="page-title mb-1">🔮 Demand Forecasting & Inventory Planning</h1>
+            <p class="text-muted mb-0">Predictive replenishment estimates powered by historical transaction velocity and NumPy trend modeling.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('analytics.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
+                📈 Sales Analytics
+            </a>
+            <a href="{{ url_for('products.index') }}" class="btn btn-primary btn-sm shadow-sm">
+                📦 Manage Inventory
+            </a>
+        </div>
+    </div>
+
+    <!-- Educational Methodology Banner for College Presentation -->
+    <div class="card border-0 shadow-sm mb-4 bg-light">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-start gap-3">
+                <span class="fs-2">🎓</span>
+                <div class="flex-grow-1">
+                    <h5 class="fw-bold text-dark mb-1">Mathematical Forecasting Methodology (Viva Reference)</h5>
+                    <p class="text-secondary small mb-2">
+                        This module applies a two-step <strong>Sales Velocity + Linear Trend Analysis</strong> model using NumPy:
+                    </p>
+                    <div class="row g-2 small text-muted">
+                        <div class="col-md-3">
+                            <div class="p-2 bg-white rounded border">
+                                <strong>1. Sales Velocity:</strong><br>
+                                <code>V = Total Sold / Active Days</code>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2 bg-white rounded border">
+                                <strong>2. NumPy Polyfit:</strong><br>
+                                <code>slope = np.polyfit(t, qty, 1)</code>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2 bg-white rounded border">
+                                <strong>3. Projected Demand:</strong><br>
+                                <code>Est = V × 30 × (1 ± slope)</code>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-2 bg-white rounded border">
+                                <strong>4. Reorder Buffer:</strong><br>
+                                <code>Shortage = Est - Stock</code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 small text-muted">
+                        <span class="badge bg-secondary-subtle text-secondary border">Notice</span>
+                        Products with 0 or 1 sale are appropriately flagged with <em>Insufficient Data / Baseline Estimate</em>, ensuring statistical honesty without dummy numbers.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not forecast.has_data %}
+        <div class="card border-0 shadow-sm text-center py-5">
+            <div class="card-body">
+                <div class="fs-1 mb-2">🏷️</div>
+                <h4 class="fw-bold">No Historical Sales Available for Forecasting</h4>
+                <p class="text-muted">Record sales in the system to enable mathematical demand projections.</p>
+                <a href="{{ url_for('sales.index') }}" class="btn btn-primary btn-sm">Go to Sales</a>
+            </div>
+        </div>
+    {% else %}
+        <!-- KPI Summary Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-sm-6">
+                <div class="card border-0 shadow-sm h-100 p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 bg-primary-subtle text-primary rounded-3 fs-3">📦</div>
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Est. 30D Demand</div>
+                            <div class="fs-4 fw-bold text-primary">{{ "{:,}".format(forecast.summary.total_projected_demand_30d) }} Units*</div>
+                            <div class="text-muted small">Combined catalog projection</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-sm-6">
+                <div class="card border-0 shadow-sm h-100 p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 bg-danger-subtle text-danger rounded-3 fs-3">🚨</div>
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Reorder Needed</div>
+                            <div class="fs-4 fw-bold text-danger">{{ forecast.summary.reorder_needed_count }} Products</div>
+                            <div class="text-muted small">Risk of stockout within 30 days</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-sm-6">
+                <div class="card border-0 shadow-sm h-100 p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 bg-success-subtle text-success rounded-3 fs-3">🎯</div>
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Trend Verified</div>
+                            <div class="fs-4 fw-bold text-success">{{ forecast.summary.high_confidence_count }} Products</div>
+                            <div class="text-muted small">High confidence (≥3 transactions)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-sm-6">
+                <div class="card border-0 shadow-sm h-100 p-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-3 bg-warning-subtle text-warning-emphasis rounded-3 fs-3">⏳</div>
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Limited History</div>
+                            <div class="fs-4 fw-bold text-dark">{{ forecast.summary.insufficient_data_count }} Products</div>
+                            <div class="text-muted small">Baseline estimate (≤1 sale)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forecasting Comparison Chart -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light border-0 py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title fw-bold mb-0">📊 Historical Sales vs. Estimated 30-Day Demand</h5>
+                    <small class="text-muted">Comparing actual realized sales against predictive next-period projections</small>
+                </div>
+                <span class="badge bg-primary-subtle text-primary border">NumPy Projected</span>
+            </div>
+            <div class="card-body p-4">
+                <div style="position: relative; height: 320px; width: 100%;">
+                    <canvas id="forecastChart"></canvas>
+                </div>
+            </div>
+            <div class="card-footer bg-light py-2 text-muted small text-end">
+                * Note: Projected Demand values are mathematical approximations based on current run-rates.
+            </div>
+        </div>
+
+        <!-- Comprehensive Demand Forecasting & Reorder Table -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light border-0 py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title fw-bold mb-0">📋 Product-Wise Demand Projections & Replenishment Plan</h5>
+                    <small class="text-muted">All forecast values are labeled estimates based on actual SQLite database records</small>
+                </div>
+                <span class="badge bg-secondary-subtle text-secondary border">{{ forecast.forecast_list|length }} Products Analyzed</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product Details</th>
+                            <th class="text-center">Current Stock</th>
+                            <th class="text-center">Historical Sold</th>
+                            <th class="text-center">Daily Velocity</th>
+                            <th class="text-center">Demand Trend</th>
+                            <th class="text-center">Confidence</th>
+                            <th class="text-center">Est. 7D Demand</th>
+                            <th class="text-center">Est. 30D Demand*</th>
+                            <th class="text-center">Stock Status</th>
+                            <th class="text-end">Recommended Reorder</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in forecast.forecast_list %}
+                            <tr>
+                                <td>
+                                    <strong class="text-dark">{{ item.product_name }}</strong>
+                                    <div class="small text-muted">{{ item.category }} &bull; {{ item.price | inr }}</div>
+                                </td>
+                                <td class="text-center">
+                                    {% if item.current_stock <= 0 %}
+                                        <span class="badge bg-danger text-white">0</span>
+                                    {% elif item.current_stock <= 5 %}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">{{ item.current_stock }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">{{ item.current_stock }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center fw-bold">{{ item.historical_sold }} units</td>
+                                <td class="text-center text-muted small">{{ item.daily_velocity }} / day</td>
+                                <td class="text-center small">{{ item.trend_label }}</td>
+                                <td class="text-center">
+                                    {% if 'High' in item.confidence %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">High</span>
+                                    {% elif 'Medium' in item.confidence %}
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle">Medium</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary-subtle text-secondary border" title="Fewer than 2 sales transactions recorded in database">Baseline</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center fw-bold text-secondary">{{ item.forecast_7d }}</td>
+                                <td class="text-center fw-bold text-primary">{{ item.forecast_30d }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-{{ item.status_color }}-subtle text-{{ item.status_color }} border border-{{ item.status_color }}-subtle">
+                                        {{ item.stock_status }}
+                                    </span>
+                                </td>
+                                <td class="text-end fw-bold">
+                                    {% if item.reorder_qty > 0 %}
+                                        <span class="text-danger">+{{ item.reorder_qty }} Units</span>
+                                        <div><a href="{{ url_for('products.edit', product_id=item.product_id) }}" class="btn btn-sm btn-outline-danger py-0 px-2 mt-1" style="font-size: 0.75rem;">Restock</a></div>
+                                    {% else %}
+                                        <span class="text-success small">✓ Stock Adequate</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-light py-2 text-muted small text-end">
+                * Clearly labeled as estimates: All forecast values are statistical approximations, not realized transactions.
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if forecast.has_data %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const forecastData = {{ forecast.chart_forecast|tojson }};
+
+    const ctx = document.getElementById('forecastChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: forecastData.labels,
+                datasets: [
+                    {
+                        label: 'Actual Historical Sales (Units)',
+                        data: forecastData.historical_sold,
+                        backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                        borderColor: '#2563eb',
+                        borderWidth: 1.5,
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Estimated Next 30-Day Demand (Projected Units)',
+                        data: forecastData.projected_demand,
+                        backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                        borderColor: '#059669',
+                        borderWidth: 1.5,
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Quantity (Units)' }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y + ' units';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endif %}
+{% endblock %}

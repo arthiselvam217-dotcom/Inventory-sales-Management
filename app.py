@@ -8,6 +8,7 @@ from sales.routes import sales_bp
 from analytics.routes import analytics_bp
 # Import models so they are registered with SQLAlchemy metadata
 from models import Product, Sale
+from utils import format_inr
 
 def create_app(config_class=Config):
     """
@@ -22,6 +23,10 @@ def create_app(config_class=Config):
 
     # Initialize extensions
     db.init_app(app)
+
+    # Register custom Jinja filters
+    app.jinja_env.filters['inr'] = format_inr
+    app.jinja_env.filters['format_inr'] = format_inr
 
     # Register blueprints
     app.register_blueprint(dashboard_bp)

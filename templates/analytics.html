@@ -8,11 +8,14 @@
     <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h1 class="page-title mb-1">Sales & Inventory Analytics</h1>
-            <p class="text-muted mb-0">Statistical data modeling, product velocity metrics, and revenue trends powered by NumPy & Pandas.</p>
+            <p class="text-muted mb-0">Statistical data modeling, category distribution, and revenue trends powered by NumPy & Pandas.</p>
         </div>
-        <div class="d-flex gap-2 align-items-center">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
             <a href="{{ url_for('analytics.run_pyspark') }}" class="btn btn-warning btn-sm d-inline-flex align-items-center gap-1 shadow-sm fw-semibold" title="Execute PySpark local[*] workflow and save results to CSV">
                 <span>⚡</span> Run PySpark Analytics
+            </a>
+            <a href="{{ url_for('analytics.forecast') }}" class="btn btn-info btn-sm text-white d-inline-flex align-items-center gap-1 shadow-sm" title="View Demand Forecasting">
+                <span>🔮</span> Demand Forecasting
             </a>
             <a href="{{ url_for('sales.index') }}" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
                 <span>🛒</span> Sales Management
@@ -47,7 +50,7 @@
                         <div class="p-3 bg-success-subtle text-success rounded-3 fs-3">💰</div>
                         <div>
                             <div class="text-muted small fw-semibold text-uppercase">Total Revenue</div>
-                            <div class="fs-3 fw-bold text-success">₹{{ "{:,.2f}".format(analytics.total_revenue) }}</div>
+                            <div class="fs-3 fw-bold text-success">{{ analytics.total_revenue | inr }}</div>
                             <div class="text-muted small">From {{ analytics.total_transactions }} transaction(s)</div>
                         </div>
                     </div>
@@ -61,7 +64,7 @@
                         <div>
                             <div class="text-muted small fw-semibold text-uppercase">Total Units Sold</div>
                             <div class="fs-3 fw-bold text-primary">{{ "{:,}".format(analytics.total_units_sold) }}</div>
-                            <div class="text-muted small">Items dispatched from inventory</div>
+                            <div class="text-muted small">Dispatched across {{ analytics.total_products }} catalog items</div>
                         </div>
                     </div>
                 </div>
@@ -73,8 +76,8 @@
                         <div class="p-3 bg-info-subtle text-info rounded-3 fs-3">🧾</div>
                         <div>
                             <div class="text-muted small fw-semibold text-uppercase">Total Transactions</div>
-                            <div class="fs-3 fw-bold text-dark">{{ "{:,}".format(analytics.total_transactions) }}</div>
-                            <div class="text-muted small">Completed customer orders</div>
+                            <div class="fs-3 fw-bold text-dark">{{ "{:,}".format(analytics.total_transactions) }} Orders</div>
+                            <div class="text-muted small">Completed customer transactions</div>
                         </div>
                     </div>
                 </div>
@@ -86,7 +89,7 @@
                         <div class="p-3 bg-warning-subtle text-warning-emphasis rounded-3 fs-3">📊</div>
                         <div>
                             <div class="text-muted small fw-semibold text-uppercase">Avg Sale / Order</div>
-                            <div class="fs-3 fw-bold text-dark">₹{{ "{:,.2f}".format(analytics.avg_transaction_value) }}</div>
+                            <div class="fs-3 fw-bold text-dark">{{ analytics.avg_transaction_value | inr }}</div>
                             <div class="text-muted small">Mean revenue per transaction</div>
                         </div>
                     </div>
@@ -97,26 +100,33 @@
         <!-- NumPy Statistical Insights Card -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-light border-0 py-3 d-flex align-items-center justify-content-between">
-                <h5 class="card-title fw-bold mb-0">🧮 Statistical Dispersion (NumPy Analysis)</h5>
+                <div>
+                    <h5 class="card-title fw-bold mb-0">🧮 Statistical Dispersion (NumPy Analysis)</h5>
+                    <small class="text-muted">Rigorous numerical dispersion metrics calculated directly from SQLite transaction values</small>
+                </div>
                 <span class="badge bg-primary-subtle text-primary border">NumPy Computed</span>
             </div>
             <div class="card-body p-3">
                 <div class="row g-3 text-center">
                     <div class="col-md-3 col-6 border-end">
                         <div class="text-muted small text-uppercase fw-semibold">Minimum Sale</div>
-                        <div class="fs-5 fw-bold text-dark mt-1">₹{{ "{:,.2f}".format(analytics.stats.min_sale) }}</div>
+                        <div class="fs-5 fw-bold text-dark mt-1">{{ analytics.stats.min_sale | inr }}</div>
+                        <small class="text-muted"><code>np.min()</code></small>
                     </div>
                     <div class="col-md-3 col-6 border-end">
                         <div class="text-muted small text-uppercase fw-semibold">Maximum Sale</div>
-                        <div class="fs-5 fw-bold text-dark mt-1">₹{{ "{:,.2f}".format(analytics.stats.max_sale) }}</div>
+                        <div class="fs-5 fw-bold text-dark mt-1">{{ analytics.stats.max_sale | inr }}</div>
+                        <small class="text-muted"><code>np.max()</code></small>
                     </div>
                     <div class="col-md-3 col-6 border-end">
                         <div class="text-muted small text-uppercase fw-semibold">Median Sale</div>
-                        <div class="fs-5 fw-bold text-primary mt-1">₹{{ "{:,.2f}".format(analytics.stats.median_sale) }}</div>
+                        <div class="fs-5 fw-bold text-primary mt-1">{{ analytics.stats.median_sale | inr }}</div>
+                        <small class="text-muted"><code>np.median()</code></small>
                     </div>
                     <div class="col-md-3 col-6">
                         <div class="text-muted small text-uppercase fw-semibold">Standard Deviation (σ)</div>
-                        <div class="fs-5 fw-bold text-secondary mt-1">₹{{ "{:,.2f}".format(analytics.stats.std_sale) }}</div>
+                        <div class="fs-5 fw-bold text-secondary mt-1">{{ analytics.stats.std_sale | inr }}</div>
+                        <small class="text-muted"><code>np.std()</code></small>
                     </div>
                 </div>
             </div>
@@ -128,7 +138,10 @@
             <div class="col-lg-7">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-light border-0 py-3 d-flex justify-content-between align-items-center">
-                        <h5 class="card-title fw-bold mb-0">📈 Daily Revenue & Volume Trend</h5>
+                        <div>
+                            <h5 class="card-title fw-bold mb-0">📈 Daily Revenue & Volume Trend</h5>
+                            <small class="text-muted">Revenue timeline grouped by transaction dates</small>
+                        </div>
                         <span class="badge bg-secondary-subtle text-secondary border">Timeline</span>
                     </div>
                     <div class="card-body p-4">
@@ -143,7 +156,10 @@
             <div class="col-lg-5">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-light border-0 py-3 d-flex justify-content-between align-items-center">
-                        <h5 class="card-title fw-bold mb-0">📊 Top Products Revenue</h5>
+                        <div>
+                            <h5 class="card-title fw-bold mb-0">📊 Top Products Revenue</h5>
+                            <small class="text-muted">Product-wise monetary contribution</small>
+                        </div>
                         <span class="badge bg-secondary-subtle text-secondary border">Product-Wise</span>
                     </div>
                     <div class="card-body p-4">
@@ -151,6 +167,58 @@
                             <canvas id="productBarChart"></canvas>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category-Wise Sales Distribution (Compulsory Requirement) -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light border-0 py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title fw-bold mb-0">🏷️ Category-Wise Sales Analysis (Pandas GroupBy)</h5>
+                    <small class="text-muted">Breakdown of inventory performance across distinct product categories</small>
+                </div>
+                <span class="badge bg-info-subtle text-info border">{{ analytics.category_analysis|length }} Categories</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Category Name</th>
+                                <th class="text-center">Products in Category</th>
+                                <th class="text-center">Orders</th>
+                                <th class="text-center">Units Sold</th>
+                                <th class="text-end">Total Revenue (₹)</th>
+                                <th class="text-center" style="width: 200px;">Revenue Share</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in analytics.category_analysis %}
+                                <tr>
+                                    <td>
+                                        <strong class="text-dark">{{ cat.category }}</strong>
+                                    </td>
+                                    <td class="text-center">{{ cat.product_count }}</td>
+                                    <td class="text-center"><span class="badge bg-light text-dark border">{{ cat.transaction_count }}</span></td>
+                                    <td class="text-center fw-bold">{{ cat.total_units }}</td>
+                                    <td class="text-end fw-bold text-success">{{ cat.total_revenue | inr }}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 6px;">
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ cat.revenue_share }}%;" aria-valuenow="{{ cat.revenue_share }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <small class="fw-semibold text-muted" style="width: 45px;">{{ cat.revenue_share }}%</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-3 text-muted">No category data recorded.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -172,7 +240,7 @@
                                     <th>Category</th>
                                     <th class="text-center">Units Sold</th>
                                     <th class="text-end">Revenue</th>
-                                    <th class="text-center">Stock</th>
+                                    <th class="text-center">Stock Left</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -181,7 +249,7 @@
                                         <td><strong>{{ item.product_name }}</strong></td>
                                         <td><span class="badge bg-secondary-subtle text-secondary">{{ item.category }}</span></td>
                                         <td class="text-center"><span class="badge bg-success-subtle text-success px-2 py-1 fw-bold">{{ item.total_quantity }} sold</span></td>
-                                        <td class="text-end fw-bold text-success">₹{{ "{:,.2f}".format(item.total_revenue) }}</td>
+                                        <td class="text-end fw-bold text-success">{{ item.total_revenue | inr }}</td>
                                         <td class="text-center text-muted">{{ item.stock }} left</td>
                                     </tr>
                                 {% else %}
@@ -225,7 +293,7 @@
                                                 <span class="badge bg-warning-subtle text-warning-emphasis px-2 py-1">{{ item.total_quantity }} sold</span>
                                             {% endif %}
                                         </td>
-                                        <td class="text-end text-muted">₹{{ "{:,.2f}".format(item.total_revenue) }}</td>
+                                        <td class="text-end text-muted">{{ item.total_revenue | inr }}</td>
                                         <td class="text-center fw-semibold text-danger">{{ item.stock }} in stock</td>
                                     </tr>
                                 {% else %}
@@ -243,7 +311,10 @@
         <!-- Full Product-Wise Performance Analysis (Pandas Groupby) -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-light border-0 py-3 d-flex justify-content-between align-items-center">
-                <h5 class="card-title fw-bold mb-0">📋 Comprehensive Product Sales Performance (Pandas GroupBy)</h5>
+                <div>
+                    <h5 class="card-title fw-bold mb-0">📋 Comprehensive Product Sales Performance (Pandas GroupBy)</h5>
+                    <small class="text-muted">Aggregating total volume, revenue, and catalog inventory shares</small>
+                </div>
                 <span class="badge bg-secondary-subtle text-secondary border">{{ analytics.product_analysis|length }} Total Products</span>
             </div>
             <div class="table-responsive">
@@ -268,7 +339,7 @@
                                 <td><span class="badge bg-light text-secondary border">{{ row.category }}</span></td>
                                 <td class="text-center">{{ row.transaction_count }}</td>
                                 <td class="text-center fw-bold">{{ row.total_quantity }}</td>
-                                <td class="text-end fw-bold text-success">₹{{ "{:,.2f}".format(row.total_revenue) }}</td>
+                                <td class="text-end fw-bold text-success">{{ row.total_revenue | inr }}</td>
                                 <td class="text-center">
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="progress flex-grow-1" style="height: 6px;">
@@ -327,7 +398,7 @@
                                             <td><strong>{{ row.day_str }}</strong></td>
                                             <td class="text-center"><span class="badge bg-light text-dark border px-2 py-1">{{ row.transactions }}</span></td>
                                             <td class="text-center fw-bold">{{ row.units }}</td>
-                                            <td class="text-end fw-bold text-success">₹{{ "{:,.2f}".format(row.revenue) }}</td>
+                                            <td class="text-end fw-bold text-success">{{ row.revenue | inr }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -353,7 +424,7 @@
                                             <td><strong>{{ row.month_str }}</strong></td>
                                             <td class="text-center"><span class="badge bg-light text-dark border px-2 py-1">{{ row.transactions }}</span></td>
                                             <td class="text-center fw-bold">{{ row.units }}</td>
-                                            <td class="text-end fw-bold text-success">₹{{ "{:,.2f}".format(row.revenue) }}</td>
+                                            <td class="text-end fw-bold text-success">{{ row.revenue | inr }}</td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -421,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         position: 'left',
                         title: { display: true, text: 'Revenue (₹)' },
                         ticks: {
-                            callback: function(value) { return '₹' + value.toLocaleString(); }
+                            callback: function(value) { return '₹' + value.toLocaleString('en-IN'); }
                         }
                     },
                     y1: {
@@ -437,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         callbacks: {
                             label: function(context) {
                                 if (context.dataset.yAxisID === 'y') {
-                                    return 'Revenue: ₹' + context.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2});
+                                    return 'Revenue: ₹' + context.parsed.y.toLocaleString('en-IN', {minimumFractionDigits: 2});
                                 }
                                 return 'Units Sold: ' + context.parsed.y;
                             }
@@ -474,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         beginAtZero: true,
                         title: { display: true, text: 'Revenue (₹)' },
                         ticks: {
-                            callback: function(value) { return '₹' + value.toLocaleString(); }
+                            callback: function(value) { return '₹' + value.toLocaleString('en-IN'); }
                         }
                     }
                 },
@@ -483,7 +554,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return 'Revenue: ₹' + context.parsed.y.toLocaleString(undefined, {minimumFractionDigits: 2});
+                                return 'Revenue: ₹' + context.parsed.y.toLocaleString('en-IN', {minimumFractionDigits: 2});
                             }
                         }
                     }

@@ -24,7 +24,8 @@
                 <a href="{{ url_for('dashboard.index') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('dashboard.') %}active{% endif %}">Dashboard</a>
                 <a href="{{ url_for('products.index') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('products.') %}active{% endif %}">Products</a>
                 <a href="{{ url_for('sales.index') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('sales.') %}active{% endif %}">Sales</a>
-                <a href="{{ url_for('analytics.index') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('analytics.') %}active{% endif %}">Analytics</a>
+                <a href="{{ url_for('analytics.index') }}" class="nav-link {% if request.endpoint and request.endpoint == 'analytics.index' %}active{% endif %}">Analytics</a>
+                <a href="{{ url_for('analytics.forecast') }}" class="nav-link {% if request.endpoint and request.endpoint == 'analytics.forecast' %}active{% endif %}">Forecasting</a>
             </nav>
         </div>
     </header>

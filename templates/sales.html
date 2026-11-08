@@ -40,7 +40,7 @@
                     <div class="fs-2">💰</div>
                     <div>
                         <div class="text-muted small fw-semibold text-uppercase">Total Revenue</div>
-                        <div class="fs-4 fw-bold text-success">₹{{ "%.2f"|format(total_revenue) }}</div>
+                        <div class="fs-4 fw-bold text-success">{{ total_revenue | inr }}</div>
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                                                 data-price="{{ product.price }}" 
                                                 data-stock="{{ product.stock }}"
                                                 {% if product.stock <= 0 %}class="text-danger"{% endif %}>
-                                            {{ product.name }} &bull; ₹{{ "%.2f"|format(product.price) }} ({{ product.stock }} in stock)
+                                            {{ product.name }} &bull; {{ product.price | inr }} ({{ product.stock }} in stock)
                                         </option>
                                     {% endfor %}
                                 </select>
@@ -150,7 +150,7 @@
                                         <span class="badge bg-light text-dark border px-2 py-1">{{ sale.quantity }}</span>
                                     </td>
                                     <td class="text-end fw-bold text-success">
-                                        ₹{{ "%.2f"|format(sale.total_amount) }}
+                                        {{ sale.total_amount | inr }}
                                     </td>
                                 </tr>
                             {% else %}
